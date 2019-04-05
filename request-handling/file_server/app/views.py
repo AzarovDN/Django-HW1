@@ -12,12 +12,10 @@ class FileList(TemplateView):
 
         file_list = listdir('./files')
         result_list = []
-        try:
-            if date:
-                date = time.strptime(date.split(' ')[0], "%Y-%m-%d")
-                date = datetime.date(date[0], date[1], date[2])
-        except ValueError:
-            date = None
+
+        if date:
+            year, month, day, *_ = time.strptime(date, "%Y-%m-%d")
+            date = datetime.date(year, month, day)
 
         for file in file_list:
             stat_info = stat(f'./files/{file}')
@@ -39,12 +37,18 @@ class FileList(TemplateView):
 
 def file_content(request, name):
     # Реализуйте алгоритм подготавливающий контекстные данные для шаблона по примеру:
-    with open(f'./files/{name}') as f:
-        file = f.read()
+    file_list = listdir('./files')
+    if name in file_list:
+        with open(f'./files/{name}') as f:
+            file = f.read()
 
-        return render(
-            request,
-            'file_content.html',
-            context={'file_name': name, 'file_content': file}
-        )
-
+            return render(
+                request,
+                'file_content.html',
+                context={'file_name': name, 'file_content': file}
+            )
+    return render(
+        request,
+        'file_content.html',
+        context={'file_name': f'Файл {name} не найден', 'file_content': ''}
+    )

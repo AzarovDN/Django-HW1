@@ -2,6 +2,7 @@ from django.shortcuts import render_to_response, redirect
 from django.urls import reverse
 import csv
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.conf import settings
 
 
 def index(request):
@@ -9,7 +10,7 @@ def index(request):
 
 
 def bus_stations(request):
-    with open('data-398-2018-08-30.csv', newline='', encoding='cp1251') as csvfile:
+    with open(settings.BUS_STATION_CSV, newline='', encoding='cp1251') as csvfile:
         data = csv.DictReader(csvfile)
         bus_stations_dict = {}
         data_list = []
@@ -24,21 +25,22 @@ def bus_stations(request):
     page = request.GET.get('page')
 
     context = {}
+
     context['bus_stations'] = paginator.get_page(page)
 
-    try:
+    if page:
         context['current_page'] = paginator.page(page).number
-    except PageNotAnInteger:
+    else:
         # Если None, то выбираем первую страницу
         context['current_page'] = paginator.page(1).number
 
-    try:
+    if paginator.get_page(page).has_previous():
         context['prev_page_url'] = f'bus_stations?page={paginator.get_page(page).previous_page_number()}'
-    except EmptyPage:
+    else:
         context['prev_page_url'] = None
-    try:
+    if paginator.get_page(page).has_next():
         context['next_page_url'] = f'bus_stations?page={paginator.get_page(page).next_page_number()}'
-    except EmptyPage:
+    else:
         context['next_page_url'] = None
 
     return render_to_response('index.html', context)
